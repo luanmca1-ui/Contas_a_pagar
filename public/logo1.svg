@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <defs>
+    <linearGradient id="blade" x1="40" x2="200" y1="60" y2="140" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0ea5e9" />
+      <stop offset="1" stop-color="#14b8a6" />
+    </linearGradient>
+    <linearGradient id="handle" x1="60" x2="200" y1="170" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff5a50" />
+      <stop offset="1" stop-color="#f97316" />
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" rx="32" fill="#fff1f0" />
+  <circle cx="120" cy="120" r="88" fill="#0f172a" />
+  <circle cx="120" cy="120" r="80" fill="#131c2e" />
+  <rect x="60" y="72" width="140" height="32" rx="12" fill="url(#blade)" />
+  <rect x="48" y="106" width="144" height="24" rx="8" fill="#0b1529" />
+  <rect x="46" y="120" width="152" height="52" rx="20" fill="url(#handle)" />
+  <circle cx="76" cy="146" r="8" fill="#ffe0da" />
+  <circle cx="96" cy="146" r="5" fill="#ffe0da" />
+  <text x="120" y="207" fill="#ff5a50" font-size="20" font-family="Segoe UI, sans-serif" font-weight="700" text-anchor="middle">
+    THE BARBER
+  </text>
+  <text x="120" y="228" fill="#0ea5e9" font-size="14" font-family="Segoe UI, sans-serif" font-weight="700" text-anchor="middle">
+    EXPRESS
+  </text>
+</svg>
