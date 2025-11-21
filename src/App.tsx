@@ -122,8 +122,7 @@ const buildExpense = (row: Record<string, string>, index: number): Expense | nul
   }
 }
 
-const statusLabel = (expense: Expense) =>
-  expense.controleStatus || expense.statusPagamento || 'Sem status'
+const statusLabel = (expense: Expense) => expense.statusPagamento || 'Sem status'
 
 const isPaid = (expense: Expense) => {
   const statusText = statusLabel(expense).toLowerCase()
@@ -465,18 +464,6 @@ function App() {
       cell: (info) => {
         const label = info.row.original.controleStatus || 'Sem status'
         return <span className={`badge ${statusTone(label)}`}>{label}</span>
-      },
-    },
-    {
-      header: 'Status Pagamento',
-      id: 'statusPagamento',
-      accessorFn: (row) => row.statusPagamento || 'Sem status',
-      cell: (info) => {
-        const expense = info.row.original
-        const overdue = isOverdue(expense, today)
-        const paid = isPaid(expense)
-        const tone = paid ? 'success' : overdue ? 'danger' : 'warning'
-        return <span className={`badge ${tone}`}>{expense.statusPagamento || 'Sem status'}</span>
       },
     },
     {
