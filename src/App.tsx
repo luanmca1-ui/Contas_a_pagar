@@ -123,7 +123,7 @@ const buildExpense = (row: Record<string, string>, index: number): Expense | nul
 }
 
 const statusLabel = (expense: Expense) =>
-  expense.statusPagamento || expense.controleStatus || 'Sem status'
+  expense.controleStatus || expense.statusPagamento || 'Sem status'
 
 const isPaid = (expense: Expense) => {
   const statusText = statusLabel(expense).toLowerCase()
@@ -459,15 +459,24 @@ function App() {
       cell: (info) => formatCurrency(info.getValue<number>()),
     },
     {
-      header: 'Status',
-      id: 'status',
-      accessorFn: (row) => statusLabel(row),
+      header: 'Controle de Status',
+      id: 'controleStatus',
+      accessorFn: (row) => row.controleStatus || 'Sem status',
+      cell: (info) => {
+        const label = info.row.original.controleStatus || 'Sem status'
+        return <span className={`badge ${statusTone(label)}`}>{label}</span>
+      },
+    },
+    {
+      header: 'Status Pagamento',
+      id: 'statusPagamento',
+      accessorFn: (row) => row.statusPagamento || 'Sem status',
       cell: (info) => {
         const expense = info.row.original
         const overdue = isOverdue(expense, today)
         const paid = isPaid(expense)
         const tone = paid ? 'success' : overdue ? 'danger' : 'warning'
-        return <span className={`badge ${tone}`}>{statusLabel(expense)}</span>
+        return <span className={`badge ${tone}`}>{expense.statusPagamento || 'Sem status'}</span>
       },
     },
     {
@@ -555,12 +564,6 @@ function App() {
             </button>
             {showEmail && <span className="muted">luanmca1@gmail.com</span>}
           </div>
-        </div>
-        <div className="hero-pill">
-          <span>Fonte</span>
-          <a href={CSV_URL} target="_blank" rel="noreferrer">
-            Google Sheets (CSV)
-          </a>
         </div>
       </header>
 
