@@ -163,7 +163,7 @@ const abbreviateUnit = (name: string) => {
   return cleaned
 }
 
-type UpcomingRange = '7' | '15' | '30'
+type UpcomingRange = 'today' | 'tomorrow' | '7' | '15' | '30'
 
 function App() {
   const [brandSrc, setBrandSrc] = useState<string>('/logo.png')
@@ -355,16 +355,22 @@ function App() {
   }, [expensesForCharts])
 
   const upcoming = useMemo(() => {
-    const buildUpcoming = (days: number) => {
-      const end = addDays(today, days)
+    const byRange = (range: UpcomingRange) => {
+      const start =
+        range === 'tomorrow' ? addDays(today, 1) : range === 'today' ? today : today
+      const end =
+        range === 'today'
+          ? addDays(today, 1)
+          : range === 'tomorrow'
+            ? addDays(today, 2)
+            : addDays(today, Number(range))
+
       return expenses
         .filter((expense) => {
           const matchesUnit = upcomingUnit === 'todas' || expense.unidade === upcomingUnit
+          if (!matchesUnit || !expense.dataVencimento || isPaid(expense)) return false
           return (
-            matchesUnit &&
-            !isPaid(expense) &&
-            expense.dataVencimento &&
-            !isBefore(expense.dataVencimento, today) &&
+            !isBefore(expense.dataVencimento, start) &&
             isBefore(expense.dataVencimento, end)
           )
         })
@@ -376,9 +382,11 @@ function App() {
     }
 
     return {
-      '7': buildUpcoming(7),
-      '15': buildUpcoming(15),
-      '30': buildUpcoming(30),
+      today: byRange('today'),
+      tomorrow: byRange('tomorrow'),
+      '7': byRange('7'),
+      '15': byRange('15'),
+      '30': byRange('30'),
     }
   }, [expenses, today, upcomingUnit])
 
@@ -464,6 +472,18 @@ function App() {
       cell: (info) => {
         const label = info.row.original.controleStatus || 'Sem status'
         return <span className={`badge ${statusTone(label)}`}>{label}</span>
+      },
+    },
+    {
+      header: 'Status Pagamento',
+      id: 'statusPagamento',
+      accessorFn: (row) => row.statusPagamento || 'Sem status',
+      cell: (info) => {
+        const expense = info.row.original
+        const overdue = isOverdue(expense, today)
+        const paid = isPaid(expense)
+        const tone = paid ? 'success' : overdue ? 'danger' : 'warning'
+        return <span className={`badge ${tone}`}>{expense.statusPagamento || 'Sem status'}</span>
       },
     },
     {
@@ -907,7 +927,7 @@ function App() {
       <section className="card upcoming">
         <div className="section-title">
           <div>
-            <h3>Próximos vencimentos</h3>
+            <h3>Proximos vencimentos</h3>
             <p className="muted">Apenas leitura, focado no que vence em breve</p>
           </div>
           <div className="upcoming-actions">
@@ -920,13 +940,13 @@ function App() {
               ))}
             </select>
             <div className="tabs">
-              {(['7', '15', '30'] as UpcomingRange[]).map((range) => (
+              {(['today', 'tomorrow', '7', '15', '30'] as UpcomingRange[]).map((range) => (
                 <button
                   key={range}
                   className={range === upcomingTab ? 'tab active' : 'tab'}
                   onClick={() => setUpcomingTab(range)}
                 >
-                  {`Próx. ${range} dias`}
+                  {range === 'today' ? 'Hoje' : range === 'tomorrow' ? 'Amanha' : 'Prox. ' + range + ' dias'}
                 </button>
               ))}
             </div>
@@ -939,3 +959,5 @@ function App() {
 }
 
 export default App
+
+
