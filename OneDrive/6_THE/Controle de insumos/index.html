@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pedido de Insumos</title>
+  <style>
+    :root {
+      --bg: #0a0f1c;
+      --card: #0f1729;
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --accent: #e63946; /* vermelho do logo */
+      --accent-2: #fbbf24; /* amarelo */
+      --outline: rgba(230, 57, 70, 0.4);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 20% 20%, #1d2a44, #0a0f1c 55%), #0a0f1c;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+    }
+    .card {
+      width: min(720px, 100%);
+      background: linear-gradient(135deg, rgba(15,23,41,0.94), rgba(15,23,41,0.88));
+      padding: 18px 16px 22px;
+      border-radius: 16px;
+      box-shadow: 0 16px 45px rgba(0,0,0,0.32);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    h1 { margin: 0 0 6px; font-size: 21px; }
+    p.subtitle { margin: 0 0 12px; color: var(--muted); }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .brand .logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .brand .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .brand .logo .logo-fallback {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,0.8);
+      background: linear-gradient(135deg, rgba(230,57,70,0.18), rgba(15,23,41,0.5));
+      opacity: 0;
+      transition: opacity 150ms ease;
+    }
+    .brand .name {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+    label { display: block; margin-top: 10px; font-weight: 600; }
+    input, textarea, select {
+      width: 100%;
+      margin-top: 6px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      color: var(--text);
+    }
+    select option {
+      background: #0f1729;
+      color: var(--text);
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: 1px solid var(--accent);
+      box-shadow: 0 0 0 3px var(--outline);
+    }
+    button {
+      margin-top: 18px;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(120deg, var(--accent), #f97316);
+      color: #0b1220;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(249,115,22,0.35); }
+    #status { margin-top: 14px; white-space: pre-line; color: var(--accent); }
+    .muted { color: var(--muted); font-size: 13px; margin-top: 6px; }
+    .items-header { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .item-row {
+      margin-top: 10px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+    }
+    .item-row .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .item-row .preview {
+      font-size: 13px;
+      color: var(--accent-2);
+      margin-top: 6px;
+    }
+    .suggestions {
+      position: absolute;
+      z-index: 10;
+      background: #0f1729;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      margin-top: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      width: 100%;
+    }
+    .suggestions div {
+      padding: 8px 10px;
+      cursor: pointer;
+      color: var(--text);
+    }
+    .suggestions div:hover {
+      background: rgba(255,255,255,0.08);
+    }
+    .item-row .row-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 8px;
+      gap: 8px;
+    }
+    .secondary-btn {
+      width: auto;
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border-radius: 8px;
+      font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .insumo-input { padding-right: 44px; }
+    .clear-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.08);
+      border: none;
+      color: var(--text);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 22px;
+      z-index: 2;
+      padding: 0;
+    }
+    .clear-btn:hover {
+      background: rgba(255,255,255,0.14);
+    }
+    @media (max-width: 640px) {
+      body { padding: 14px; }
+      .card { padding: 14px; }
+      h1 { font-size: 20px; }
+      .brand .logo { width: 60px; height: 60px; }
+      button { font-size: 14px; }
+      .items-header { flex-direction: column; align-items: flex-start; }
+      .secondary-btn { width: 100%; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <div class="logo">
+        <img src="assets/logo.png" alt="THE BARBER EXPRESS" onerror="this.style.display='none'; this.nextElementSibling.style.opacity='1';" />
+        <div class="logo-fallback">TBE</div>
+      </div>
+      <div class="name">THE BARBER EXPRESS</div>
+    </div>
+    <h1>Pedido de Insumos</h1>
+    <p class="subtitle">Preencha e clique em salvar. O resumo já sai pronto para WhatsApp.</p>
+
+    <form id="insumoForm">
+      <label>Barbearia
+        <select name="barbearia" required>
+          <option value="" disabled selected>Selecione a unidade</option>
+          <option>TBE TROPICAL</option>
+          <option>TBE PÁTIO NORTE</option>
+          <option>TBE BENFICA</option>
+          <option>TBE BEAUTY EXPRESS</option>
+          <option>TBE MARABÁ</option>
+          <option>TBE METRÓPOLE</option>
+          <option>TBE BOA VISTA</option>
+          <option>TBE BOULEVARD</option>
+          <option>TBE TACARUNA</option>
+          <option>TBE PÁTIO BELÉM</option>
+          <option>TBE PARQUE</option>
+          <option>TBE SÃO LUÍS</option>
+          <option>TBE PARAGABA</option>
+          <option>TBE CASTANHEIRA</option>
+          <option>TBE LIGHT</option>
+          <option>TBE IANDÊ</option>
+          <option>TBE BOAVISTA SP</option>
+        </select>
+      </label>
+      <label>Favorecido (quem compra)
+        <input name="favorecido" placeholder="Nome do responsável" required />
+      </label>
+      <label>PIX do responsável
+        <input name="pix" placeholder="Chave PIX" required />
+      </label>
+      <label>Responsável pelo envio
+        <input name="responsavelEnvio" placeholder="Quem preencheu o pedido" required />
+      </label>
+
+      <div class="items-header">
+        <h3 style="margin:0">Itens</h3>
+        <button type="button" class="secondary-btn" id="addItem">+ Adicionar item</button>
+      </div>
+      <div id="items"></div>
+      <p class="muted">Escolha o insumo ou digite um novo nome (avaliamos para incluir na lista).</p>
+
+      <button type="submit">Salvar pedido</button>
+    </form>
+
+    <div id="status"></div>
+    <button type="button" id="copyBtn" class="secondary-btn" style="margin-top:8px; width:100%;" disabled>Copiar resumo</button>
+    <p class="muted">Após salvar, você pode copiar o resumo com o botão acima.</p>
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyn0rAftvPbK6xkgnePLkCQ5S_PeY-DFADuDrAUK7lOldx515BQAg_hXkNkrE2tL8zBeg/exec';
+
+    const form = document.getElementById('insumoForm');
+    const statusEl = document.getElementById('status');
+    const itemsContainer = document.getElementById('items');
+    const addItemBtn = document.getElementById('addItem');
+    const copyBtn = document.getElementById('copyBtn');
+
+    const INSUMOS = [
+      'Água mineral (com gás)','Água mineral (sem gás)','Água sanitária','Álcool 70%','Álcool em gel','Algodão',
+      'Amaciante de roupas','Amostras de produtos para clientes','Anotadores / blocos de notas',
+      'Ar-condicionado (manutenção e peças)','Aromatizador de ambiente','Aspirador de pó (filtros e manutenção)',
+      'Aventais para barbeiros','Balm para barba','Bancadas de trabalho','Baterias','Bebidas energéticas',
+      'Bobinas para máquina de cartão','Borrifador de água','Cadeiras de barbearia','Café (pó, cápsulas ou grãos)',
+      'Camisas / uniformes','Capas descartáveis para cliente','Carregadores de celular','Carrinhos auxiliares',
+      'Cartões de agendamento','Cartões de fidelidade','Cartuchos / tinta de impressora','Cera capilar',
+      'Cerveja long neck','Cestos de lixo','Chá','Climatizadores','Clorexidina','Copos descartáveis',
+      'Copos personalizados','Creme leave-in','Desinfetante','Desinfetante para ferramentas','Detergente',
+      'Detergente para lavar roupas','Envelopes','Escova de barba','Escova de cabelo','Escova de limpeza para máquinas',
+      'Escova de pescoço','Espelhos','Espuma de barbear','Esterilizador UV','Etiquetas adesivas','Etiquetas de preço',
+      'Extensões elétricas','Fios / cabos de energia','Filtros de linha','Filtros de água','Folhetos / flyers',
+      'Fone de ouvido','Fusíveis','Gel de barbear','Gel para cabelo','Guardanapos','HD externo para backup',
+      'Lâminas de navalha descartáveis','Lâminas para máquinas','Lâmpadas','Leave-in','Lenços umedecidos',
+      'Loção pós-barba','Luvas descartáveis','Máquinas de acabamento / detalhe','Máquinas de corte profissional',
+      'Marcadores','Máscaras descartáveis','Mexedores','Microfones para gravação','Papel A4','Papel higiênico',
+      'Papel toalha','Pastas','Pentes de corte','Pentes de guia para máquina','Pepel toalha',
+      'Peças de reposição de máquinas','Pilhas','Pincel para aplicação de talco','Pó de café / cápsulas',
+      'Pomada modeladora','Prateleiras','Protetor de pescoço descartável (neck strip)','Quadros decorativos',
+      'Rodos','Roteador Wi-Fi','Sabão líquido','Sabonete líquido','Saboneteira / dispenser','Sacos de lixo',
+      'Spray de cabelo','Stone / pedra de afiar','Suportes de mesa (QR Code)','Talco','Tapetes anti-fadiga',
+      'Tesoura de corte','Tesoura de desfiar','Toalhas descartáveis','Toalhas laváveis','Toalhas umedecidas',
+      'Tônicos capilares','Uniformes','Ventiladores','Vassouras'
+    ];
+
+    function createItemRow() {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'item-row';
+      wrapper.innerHTML = `
+        <label style="position: relative;">Nome do insumo
+          <input class="insumo-input" name="insumo" placeholder="Lâminas, shampoo..." autocomplete="off" required />
+          <button type="button" class="clear-btn" title="Apagar insumo">×</button>
+          <div class="suggestions" style="display:none;"></div>
+        </label>
+        <label>Quantidade
+          <input name="quantidade" type="number" step="1" min="0" required />
+        </label>
+        <label>Valor (R$)
+          <input name="valor" type="number" step="0.01" min="0" required />
+          <div class="hint">O total é calculado automaticamente conforme você digita.</div>
+        </label>
+        <label>Descrição
+          <textarea name="descricao" rows="2" placeholder="Observações, marca preferida..."></textarea>
+        </label>
+        <div class="row-actions">
+          <button type="button" class="secondary-btn remove-item">Remover</button>
+        </div>
+        <div class="preview"></div>
+      `;
+      const qtdInput = wrapper.querySelector('input[name="quantidade"]');
+      const valorInput = wrapper.querySelector('input[name="valor"]');
+      const previewEl = wrapper.querySelector('.preview');
+      const inputInsumo = wrapper.querySelector('.insumo-input');
+      const suggestionsEl = wrapper.querySelector('.suggestions');
+      const clearBtn = wrapper.querySelector('.clear-btn');
+
+      wrapper.querySelector('.remove-item').addEventListener('click', () => {
+        if (itemsContainer.children.length > 1) {
+          wrapper.remove();
+        }
+      });
+      qtdInput.addEventListener('input', () => updatePreview(qtdInput, valorInput, previewEl));
+      valorInput.addEventListener('input', () => updatePreview(qtdInput, valorInput, previewEl));
+      updatePreview(qtdInput, valorInput, previewEl);
+
+      const renderSuggestions = attachAutocomplete(inputInsumo, suggestionsEl);
+      clearBtn.addEventListener('click', () => {
+        inputInsumo.value = '';
+        inputInsumo.focus();
+        suggestionsEl.style.display = 'none';
+        updatePreview(qtdInput, valorInput, previewEl);
+        renderSuggestions('');
+      });
+      return wrapper;
+    }
+
+    function addItemRow() {
+      const row = createItemRow();
+      itemsContainer.appendChild(row);
+    }
+
+    addItemBtn.addEventListener('click', () => {
+      addItemRow();
+    });
+
+    function formatCurrencyBRL(value) {
+      return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function updatePreview(qtdInput, valorInput, previewEl) {
+      const qty = Number(qtdInput.value) || 0;
+      const val = Number(valorInput.value) || 0;
+      const total = qty * val;
+      if (qty === 0 && val === 0) {
+        previewEl.textContent = '';
+        return;
+      }
+      previewEl.textContent = `Simulação: ${qty} x ${formatCurrencyBRL(val)} = ${formatCurrencyBRL(total)}`;
+    }
+
+    function attachAutocomplete(inputEl, listEl) {
+      const render = (term = '') => {
+        const t = term.toLowerCase();
+        const filtered = INSUMOS.filter(opt => opt.toLowerCase().includes(t)).slice(0, 12);
+        if (!filtered.length) {
+          listEl.style.display = 'none';
+          return;
+        }
+        listEl.innerHTML = filtered.map(opt => `<div>${opt}</div>`).join('');
+        listEl.style.display = 'block';
+        [...listEl.children].forEach(div => {
+          div.addEventListener('click', () => {
+            inputEl.value = div.textContent;
+            listEl.style.display = 'none';
+          });
+        });
+      };
+
+      inputEl.addEventListener('focus', () => render(inputEl.value));
+      inputEl.addEventListener('input', () => render(inputEl.value));
+      inputEl.addEventListener('blur', () => {
+        setTimeout(() => { listEl.style.display = 'none'; }, 150);
+      });
+      return render;
+    }
+
+    copyBtn.addEventListener('click', async () => {
+      const text = statusEl.textContent;
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        copyBtn.textContent = 'Copiado!';
+        setTimeout(() => (copyBtn.textContent = 'Copiar resumo'), 1500);
+      } catch (err) {
+        copyBtn.textContent = 'Erro ao copiar';
+        setTimeout(() => (copyBtn.textContent = 'Copiar resumo'), 1500);
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusEl.textContent = 'Enviando...';
+      copyBtn.disabled = true;
+
+      const formData = new FormData(form);
+      const barbearia = formData.get('barbearia');
+      const favorecido = formData.get('favorecido');
+      const pix = formData.get('pix');
+      const responsavelEnvio = formData.get('responsavelEnvio');
+
+      const items = Array.from(itemsContainer.querySelectorAll('.item-row')).map((row) => {
+        return {
+          insumo: row.querySelector('input[name="insumo"]').value,
+          quantidade: row.querySelector('input[name="quantidade"]').value,
+          valor: row.querySelector('input[name="valor"]').value,
+          descricao: row.querySelector('textarea[name="descricao"]').value
+        };
+      }).filter(item => item.insumo);
+
+      if (!items.length) {
+        statusEl.textContent = 'Adicione pelo menos um item.';
+        return;
+      }
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' }, // evita preflight de CORS
+          body: JSON.stringify({ barbearia, favorecido, pix, responsavelEnvio, items })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Erro ao salvar');
+
+        statusEl.textContent = data.resumo;
+        copyBtn.disabled = false;
+        form.reset();
+        itemsContainer.innerHTML = '';
+        addItemRow();
+      } catch (err) {
+        statusEl.textContent = 'Erro: ' + err.message;
+        copyBtn.disabled = true;
+      }
+    });
+
+    // inicial
+    addItemRow();
+  </script>
+</body>
+</html>
